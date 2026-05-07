@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TEsJapan \u7dcf\u52d9\u90e8\u30a2\u30b7\u30b9\u30bf\u30f3\u30c8</title>
+<title>TEsJapan 総務部アシスタント</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -183,122 +183,124 @@
 <body>
 
 <div class="header">
-  <div class="header-icon">\u{1f916}</div>
+  <div class="header-icon">🤖</div>
   <div class="header-text">
-    <h1>\u7dcf\u52d9\u90e8\u30a2\u30b7\u30b9\u30bf\u30f3\u30c8</h1>
-    <p>\u5099\u54c1\u30fb\u7533\u8acb\u30fb\u65bd\u8a2d\u306b\u95a2\u3059\u308b\u8cea\u554f\u306f\u3053\u3061\u3089\u3078</p>
+    <h1>総務部アシスタント</h1>
+    <p>備品・申請・施設に関する質問はこちらへ</p>
   </div>
-  <div class="status-dot"><div class="dot"></div>\u7a3c\u50cd\u4e2d</div>
+  <div class="status-dot"><div class="dot"></div>稼働中</div>
 </div>
 
 <div class="chat-area" id="chatArea">
   <div class="welcome" id="welcomeMsg">
-    <div class="icon">\u{1f4ac}</div>
-    <h2>\u7dcf\u52d9\u90e8\u30a2\u30b7\u30b9\u30bf\u30f3\u30c8\u3078\u3088\u3046\u3053\u305d\uff01</h2>
-    <p>\u5099\u54c1\u306e\u5834\u6240\u30fb\u7533\u8acb\u65b9\u6cd5\u30fb\u4f1a\u8b70\u5ba4\u4e88\u7d04\u306a\u3069<br>
-    \u7dcf\u52d9\u90e8\u306b\u95a2\u3059\u308b\u8cea\u554f\u3092\u4f55\u3067\u3082\u805e\u3044\u3066\u304f\u3060\u3055\u3044\u3002<br><br>
-    \u4e0b\u306e\u5165\u529b\u6b04\u306b\u8cea\u554f\u3092\u3069\u3046\u305e\uff01</p>
+    <div class="icon">💬</div>
+    <h2>総務部アシスタントへようこそ！</h2>
+    <p>備品の場所・申請方法・会議室予約など<br>
+    総務部に関する質問を何でも聞いてください。<br><br>
+    下の入力欄に質問をどうぞ！</p>
   </div>
 </div>
 
 <div class="quick-bar">
-  <span>\u3088\u304f\u805e\u304b\u308c\u308b\u8cea\u554f\uff1a</span>
-  <button class="quick-btn" onclick="sendQuick('\u30b3\u30d4\u30fc\u7528\u7d19\u306f\u3069\u3053\u306b\u3042\u308a\u307e\u3059\u304b\uff1f')">\u{1f4e6} \u30b3\u30d4\u30fc\u7528\u7d19\u306e\u5834\u6240</button>
-  <button class="quick-btn" onclick="sendQuick('\u4f1a\u8b70\u5ba4\u306e\u4e88\u7d04\u65b9\u6cd5\u3092\u6559\u3048\u3066\u304f\u3060\u3055\u3044')">\u{1f4c5} \u4f1a\u8b70\u5ba4\u4e88\u7d04</button>
-  <button class="quick-btn" onclick="sendQuick('\u4ea4\u901a\u8cbb\u7cbe\u7b97\u306f\u3069\u3046\u3059\u308c\u3070\u3044\u3044\u3067\u3059\u304b\uff1f')">\u{1f4b4} \u4ea4\u901a\u8cbb\u7cbe\u7b97</button>
-  <button class="quick-btn" onclick="sendQuick('\u7dcf\u52d9\u90e8\u306e\u9023\u7d61\u5148\u3092\u6559\u3048\u3066\u304f\u3060\u3055\u3044')">\u{1f4de} \u7dcf\u52d9\u90e8\u9023\u7d61\u5148</button>
+  <span>よく聞かれる質問：</span>
+  <button class="quick-btn" onclick="sendQuick('コピー用紙はどこにありますか？')">📦 コピー用紙の場所</button>
+  <button class="quick-btn" onclick="sendQuick('会議室の予約方法を教えてください')">📅 会議室予約</button>
+  <button class="quick-btn" onclick="sendQuick('交通費精算はどうすればいいですか？')">💴 交通費精算</button>
+  <button class="quick-btn" onclick="sendQuick('総務部の連絡先を教えてください')">📞 総務部連絡先</button>
 </div>
 
 <div class="input-area">
-  <textarea id="userInput" placeholder="\u8cea\u554f\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\uff08\u4f8b\uff1a\u540d\u523a\u3092\u767a\u6ce8\u3057\u305f\u3044\uff09"
+  <textarea id="userInput" placeholder="質問を入力してください（例：名刺を発注したい）"
     rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-  <button class="send-btn" id="sendBtn" onclick="sendMessage()">\u27a4</button>
+  <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
 </div>
 
 <script>
-// \u2500\u2500 Cloudflare Worker \u306e URL\uff08API\u30ad\u30fc\u306f\u3053\u3053\u306b\u66f8\u304b\u306a\u3044\uff09\u2500\u2500
+// ── Cloudflare Worker の URL（APIキーはここに書かない）──
 const WORKER_URL = 'https://tesjapan-claude-proxy.tesjapan-gk.workers.dev';
 
-// \u2500\u2500 \u753b\u50cf\u30de\u30c3\u30d4\u30f3\u30b0\uff08Q&A\u306b\u5bfe\u5fdc\u3059\u308b\u753b\u50cf\u30d5\u30a1\u30a4\u30eb\u540d\uff09\u2500\u2500
-// Excel\u306e\u300c\u753b\u50cf\u30d5\u30a1\u30a4\u30eb\u540d\u300d\u5217\u306b\u5165\u529b\u3057\u305f\u5185\u5bb9\u3092\u4ee5\u4e0b\u306b\u8ffd\u52a0\u3057\u3066\u304f\u3060\u3055\u3044
+// ── 画像マッピング（Q&Aに対応する画像ファイル名）──
+// Excelの「画像ファイル名」列に入力した内容を以下に追加してください
 const IMAGE_DATA = {
-  'bippinndana.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzRBOTBEOSIgcng9IjgiLz48dGV4dCB4PSIyMDAiIHk9IjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPkJpaGluLURhbmE8L3RleHQ+PHRleHQgeD0iMjAwIiB5PSIxMTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+Q2FiaW5ldCBCIC0gMkY8L3RleHQ+PC9zdmc+',
-  'kaigishitsu.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzVCQUQ2RiIgcng9IjgiLz48dGV4dCB4PSIyMDAiIHk9IjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPkthZ2ktc2hpdHN1PC90ZXh0Pjx0ZXh0IHg9IjIwMCIgeT0iMTE1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPk1lZXRpbmcgUm9vbSAtIE91dGxvb2s8L3RleHQ+PC9zdmc+',
-  'copypaper.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI0U4QTgzOCIgcng9IjgiLz48dGV4dCB4PSIyMDAiIHk9IjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPkNvcHkgUGFwZXI8L3RleHQ+PHRleHQgeD0iMjAwIiB5PSIxMTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+U3RvY2tlciAtIG5lYXIgY29waWVyPC90ZXh0Pjwvc3ZnPg==',
-  'soumu.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzlCNTlCNiIgcng9IjgiLz48dGV4dCB4PSIyMDAiIHk9IjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPlNvdW11LWJ1PC90ZXh0Pjx0ZXh0IHg9IjIwMCIgeT0iMTE1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiPlRFTDogMTIzIC8gMkY8L3RleHQ+PC9zdmc+',
+  'bippinndana.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzRBOTBEOSIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjM4MCIgaGVpZ2h0PSIxODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwMCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiPuWCmeWTgeajmjwvdGV4dD48dGV4dCB4PSIyMDAiIHk9IjEyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCI+77yI44Kt44Oj44OT44ON44OD44OIQu+8iTwvdGV4dD48L3N2Zz4=',
+  'kaigishitsu.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzVCQUQ2RiIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjM4MCIgaGVpZ2h0PSIxODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwMCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiPuS8muitsOWupDwvdGV4dD48dGV4dCB4PSIyMDAiIHk9IjEyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCI+5LqI57SE5pa55rOVPC90ZXh0Pjwvc3ZnPg==',
+ypaper.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0U4QTgzOCIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjM4MCIgaGVpZ2h0PSIxODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwMCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiPuOCs+ODlOODvOeUqOe0mTwvdGV4dD48dGV4dCB4PSIyMDAiIHk9IjEyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCI+44K544OI44OD44Kr44O8PC90ZXh0Pjwvc3ZnPg==',
+  'soumu.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzlCNTlCNiIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjM4MCIgaGVpZ2h0PSIxODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwMCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiPu總5213iemUjjwvdGV4dD48dGV4dCB4PSIyMDAiIHk9IjEyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCI+MumipDwvdGV4dD48L3N2Zz4=',
 };
 const IMAGE_MAP = {
-  '\u30dc\u30fc\u30eb\u30da\u30f3': 'bippinndana.jpg',
-  '\u4ed8\u7b8b': 'bippinndana.jpg',
-  '\u5c01\u7b52': 'bippinndana.jpg',
-  '\u30b3\u30d4\u30fc\u7528\u7d19': 'copypaper.jpg',
-  '\u4f1a\u8b70\u5ba4': 'kaigishitsu.jpg',
-  '\u8cb8\u51faPC': 'kaigishitsu.jpg',
-  '\u7dcf\u52d9\u90e8\u306e\u9023\u7d61\u5148': 'soumu.jpg',
-  '\u7dcf\u52d9\u90e8\u306b\u9023\u7d61': 'soumu.jpg',
+  'ボールペン': 'bippinndana.jpg',
+  '付箋': 'bippinndana.jpg',
+  '封筒': 'bippinndana.jpg',
+  'コピー用紙': 'copypaper.jpg',
+  '会議室': 'kaigishitsu.jpg',
+  '貸出PC': 'kaigishitsu.jpg',
+  '総務部の連絡先': 'soumu.jpg',
+  '総務部に連絡': 'soumu.jpg',
 };
 
-// \u2500\u2500 \u7dcf\u52d9\u90e8 FAQ \u30c7\u30fc\u30bf \u2500\u2500
+// ── 総務部 FAQ データ ──
 const FAQ_DATA = `
-=== TEsJapan \u7dcf\u52d9\u90e8 \u793e\u5185FAQ ===
+=== TEsJapan 総務部 社内FAQ ===
 
-\u3010\u5099\u54c1\u30fb\u6d88\u8017\u54c1\u3011
-Q: \u30b3\u30d4\u30fc\u7528\u7d19\u306f\u3069\u3053\u306b\u3042\u308a\u307e\u3059\u304b\uff1f
-A: \u30b3\u30d4\u30fc\u7528\u7d19\u306f2\u968e\u306e\u5099\u54c1\u5eab\uff08B\u68da\u30fb\u5de6\u5074\uff09\u306b\u4fdd\u7ba1\u3055\u308c\u3066\u3044\u307e\u3059\u3002A4\u30fbA3\u3068\u3082\u306b\u5728\u5eab\u304c\u3042\u308a\u307e\u3059\u3002\u6b8b\u308a\u5c11\u306a\u3044\u5834\u5408\u306f\u7dcf\u52d9\u90e8\uff08\u5185\u7dda\uff1a120\uff09\u307e\u3067\u3054\u9023\u7d61\u304f\u3060\u3055\u3044\u3002
+【備品・消耗品】
+Q: ボールペンはどこにありますか？
+A: 2階総務部横の備品棚（キャビネットB）の上段にあります。黒・赤・青の3色を常備しています。なくなっていた場合は総務部（内線123）までご連絡ください。
 
-Q: \u30dc\u30fc\u30eb\u30da\u30f3\u3084\u6587\u5177\u3092\u88dc\u5145\u3057\u305f\u3044
-A: \u6587\u5177\u985e\u306f1\u968e\u7dcf\u52d9\u68da\uff08\u5f15\u304d\u51fa\u3057\u4e0a\u6bb5\uff09\u304b\u3089\u81ea\u7531\u306b\u53d6\u308a\u51fa\u305b\u307e\u3059\u3002\u5728\u5eab\u304c\u306a\u304f\u306a\u3063\u305f\u5834\u5408\u306f\u7dcf\u52d9\u90e8\u306b\u7533\u8acb\u30d5\u30a9\u30fc\u30e0\uff08Teams\u306e\u7dcf\u52d9\u30c1\u30e3\u30f3\u30cd\u30eb\u306b\u56fa\u5b9a\uff09\u304b\u3089\u767a\u6ce8\u4f9d\u983c\u3092\u3057\u3066\u304f\u3060\u3055\u3044\u3002
+Q: コピー用紙はどこにありますか？
+A: 各フロアのコピー機横のストッカーに補充用があります。在庫が少なくなったら総務部へご連絡ください。
 
-Q: \u30b3\u30d4\u30fc\u6a5f\u30fb\u30d7\u30ea\u30f3\u30bf\u30fc\u306f\u3069\u3053\u306b\u3042\u308a\u307e\u3059\u304b\uff1f
-A: \u5404\u30d5\u30ed\u30a2\u306b1\u53f0\u305a\u3064\u8a2d\u7f6e\u3055\u308c\u3066\u3044\u307e\u3059\u30021\u968e\uff1a\u30a8\u30f3\u30c8\u30e9\u30f3\u30b9\u6a2a\u30012\u968e\uff1a\u4f1a\u8b70\u5ba4A\u524d\u30013\u968e\uff1a\u4f11\u61a9\u5ba4\u96a3\u3002\u30c8\u30ca\u30fc\u5207\u308c\u306e\u5834\u5408\u306f\u7dcf\u52d9\u90e8\uff08\u5185\u7dda\uff1a120\uff09\u3078\u3054\u9023\u7d61\u304f\u3060\u3055\u3044\u3002
+Q: 付箋・ホチキス針・クリップはどこですか？
+A: 2階総務部横の備品棚（キャビネットB）中段にあります。
 
-\u3010\u7533\u8acb\u30fb\u624b\u7d9a\u304d\u3011
-Q: \u4ea4\u901a\u8cbb\u7cbe\u7b97\u306f\u3069\u3046\u3059\u308c\u3070\u3044\u3044\u3067\u3059\u304b\uff1f
-A: \u7d4c\u8cbb\u7cbe\u7b97\u30b7\u30b9\u30c6\u30e0\uff08\u793e\u5185\u30dd\u30fc\u30bf\u30eb\u2192\u7d4c\u8cbb\u7533\u8acb\uff09\u304b\u3089\u7533\u8acb\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u7de0\u3081\u65e5\u306f\u6bce\u670825\u65e5\u3001\u7fcc\u670815\u65e5\u6255\u3044\u3067\u3059\u3002\u9818\u53ce\u66f8\u306f\u539f\u672c\u3092\u30b9\u30ad\u30e3\u30f3\u3057\u3066\u6dfb\u4ed8\u3057\u3066\u304f\u3060\u3055\u3044\u3002
+Q: 封筒はどこにありますか？
+A: 2階総務部横の備品棚（キャビネットA）下段に、社用封筒（角2・長3）を常備しています。
 
-Q: \u540d\u523a\u3092\u767a\u6ce8\u3057\u305f\u3044
-A: \u540d\u523a\u767a\u6ce8\u30d5\u30a9\u30fc\u30e0\uff08\u793e\u5185\u30dd\u30fc\u30bf\u30eb\u2192\u7dcf\u52d9\u7533\u8acb\u2192\u540d\u523a\u767a\u6ce8\uff09\u304b\u3089\u7533\u8acb\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u521d\u56de\u6ce8\u6587\u306f100\u679a\u5358\u4f4d\u3001\u7d041\u9031\u9593\u3067\u7d0d\u54c1\u3055\u308c\u307e\u3059\u3002
+【貸出機器】
+Q: 会議用の貸出PCの借り方を教えてください
+A: 総務部に事前予約が必要です。Teamsの「総務部」チャネルに「貸出PC予約」と投稿し、使用日・時間・用途を記載。当日2階総務部窓口で受取（社員証確認あり）。返却は使用当日中。
 
-Q: \u51fa\u5f35\u7533\u8acb\u306e\u624b\u9806\u3092\u6559\u3048\u3066\u304f\u3060\u3055\u3044
-A: \u51fa\u5f35\u306e3\u55b6\u696d\u65e5\u524d\u307e\u3067\u306bTeams\u300c\u7dcf\u52d9\u30c1\u30e3\u30f3\u30cd\u30eb\u300d\u306e\u51fa\u5f35\u7533\u8acb\u30d5\u30a9\u30fc\u30e0\u3092\u63d0\u51fa\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u4e0a\u9577\u306e\u627f\u8a8d\u5f8c\u3001\u7dcf\u52d9\u90e8\u304c\u624b\u914d\u3057\u307e\u3059\u3002\u5bbf\u6cca\u8cbb\u306e\u4e0a\u9650\u306f1\u6cca15,000\u5186\u3067\u3059\u3002
+Q: プロジェクターを借りたい
+A: 総務部にて貸出対応しています。Teamsの総務部チャネルから予約してください。HDMI・VGA両対応のモデルです。
 
-\u3010\u65bd\u8a2d\u30fb\u8a2d\u5099\u3011
-Q: \u4f1a\u8b70\u5ba4\u306e\u4e88\u7d04\u65b9\u6cd5\u3092\u6559\u3048\u3066\u304f\u3060\u3055\u3044
-A: \u793e\u5185\u30dd\u30fc\u30bf\u30eb\u2192\u4f1a\u8b70\u5ba4\u4e88\u7d04\u304b\u3089\u4e88\u7d04\u3067\u304d\u307e\u3059\u3002\u4f1a\u8b70\u5ba4\u306f1\u968e\uff08A\u30fbB\uff09\u30012\u968e\uff08C\u30fbD\u30fbE\uff09\u306e5\u90e8\u5c4b\u3042\u308a\u307e\u3059\u3002\u6700\u59272\u9031\u9593\u524d\u304b\u3089\u4e88\u7d04\u53ef\u80fd\u3067\u3059\u3002
+Q: ポケットWi-Fiを借りたい
+A: 出張用のポケットWi-Fiは総務部で3台管理しています。出張申請時に合わせて総務部へご連絡ください。なお、6Fのパスワードは〇〇〇〇、7Fのパスワードは△△△△です。詳細は総務部（内線：120）までお問い合わせください。
 
-Q: \u99d0\u8eca\u5834\u3092\u4f7f\u3044\u305f\u3044
-A: \u99d0\u8eca\u5834\u306f\u4e8b\u524d\u7533\u8acb\u5236\u3067\u3059\u3002\u7dcf\u52d9\u90e8\u306b\u300c\u99d0\u8eca\u5834\u5229\u7528\u7533\u8acb\u66f8\u300d\u3092\u63d0\u51fa\u3057\u3001\u7a7a\u304d\u304c\u3042\u308b\u5834\u5408\u306b\u5229\u7528\u3067\u304d\u307e\u3059\u3002
+【会議室】
+Q: 会議室を予約したい
+A: Outlookの予定表から会議室リソース（2F-大会議室、2F-小会議室A、3F-打合せスペース）を選択して予約してください。当日の空室は総務部内線123で確認できます。
 
-Q: \u90f5\u4fbf\u30fb\u5b85\u914d\u4fbf\u3092\u9001\u308a\u305f\u3044
-A: \u767a\u9001\u7269\u306f1\u968e\u7dcf\u52d9\u5ba4\u306e\u300c\u767a\u9001BOX\u300d\u306b\u5165\u308c\u3066\u304f\u3060\u3055\u3044\u3002\u5348\u5f8c4\u6642\u307e\u3067\u306b\u5165\u308c\u308b\u3068\u5f53\u65e5\u767a\u9001\u3055\u308c\u307e\u3059\u3002
+Q: 会議室でお茶を出したい
+A: 来客用のペットボトル茶・コーヒーは2階総務部横の給湯室に用意しています。自由にお使いください。
 
-Q: WiFi\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u306f\uff1f
-A: 6F\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u306f\u3007\u3007\u3007\u3007\u30017F\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u306f\u25b3\u25b3\u25b3\u25b3\u3067\u3059\u3002\u8a73\u7d30\u306f\u7dcf\u52d9\u90e8\uff08\u5185\u7dda\uff1a120\uff09\u307e\u3067\u304a\u554f\u3044\u5408\u308f\u305b\u304f\u3060\u3055\u3044\u3002
+【各種申請】
+Q: 交通費精算の方法を教えてください
+A: 月末までに経費精算システム（SAP Concur）から申請してください。領収書は写真添付で可。5,000円を超える場合は原本を総務部に提出してください。
 
-Q: WiFi\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u306f\uff1f
-A: 6F\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u306f\u3007\u3007\u3007\u3007\u30017F\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u306f\u25b3\u25b3\u25b3\u25b3\u3067\u3059\u3002\u8a73\u7d30\u306f\u7dcf\u52d9\u90e8\uff08\u5185\u7dda\uff1a120\uff09\u307e\u3067\u304a\u554f\u3044\u5408\u308f\u305b\u304f\u3060\u3055\u3044\u3002
+Q: 名刺を発注したい
+A: 総務部指定のフォーム（SharePoint「総務申請」サイト内）から申請してください。発注から受取まで約5営業日です。
 
-\u3010\u7dca\u6025\u30fb\u305d\u306e\u4ed6\u3011
-Q: \u6551\u6025\u7bb1\u30fbAED\u306f\u3069\u3053\u306b\u3042\u308a\u307e\u3059\u304b\uff1f
-A: \u6551\u6025\u7bb1\u306f\u5404\u30d5\u30ed\u30a2\u306e\u7d66\u6e6f\u5ba4\u306b\u8a2d\u7f6e\u3002AED\u306f1\u968e\u30a8\u30f3\u30c8\u30e9\u30f3\u30b9\u6b63\u9762\u306e\u58c1\u306b\u8a2d\u7f6e\u3055\u308c\u3066\u3044\u307e\u3059\u3002
+Q: 出張申請の方法を教えてください
+A: SharePoint「総務申請」サイト内の「出張申請書」を提出してください。承認後、交通・宿泊の手配は各自で行い、精算は経費精算システムから行います。
 
-Q: \u7dcf\u52d9\u90e8\u306e\u9023\u7d61\u5148\u3092\u6559\u3048\u3066\u304f\u3060\u3055\u3044
-A: \u5185\u7dda\uff1a120\u3001\u30e1\u30fc\u30eb\uff1asoumu@tesjapan.co.jp\u3001\u53d7\u4ed8\u6642\u9593\uff1a\u5e73\u65e59:00\u301c18:00
+Q: 慶弔金の申請方法を教えてください
+A: 総務部までメール（soumu@tesjapan.co.jp）でご連絡ください。申請書をお送りします。
+
+【施設・入退館】
+Q: 社員証を紛失しました
+A: すぐに総務部（内線123）にご連絡ください。再発行には申請書の提出が必要で、発行まで約3営業日かかります。
+
+Q: 駐車場を使いたい
+A: 来客用駐車場は3台分あります。事前に総務部へ予約してください。社員用駐車場は契約制です。
+
+【連絡先】
+Q: 総務部の連絡先を教えてください
+A: 内線：123　メール：soumu@tesjapan.co.jp　窓口：2階 総務部　受付時間：平日 9:00〜17:30
+
+Q: 緊急時の連絡先を教えてください
+A: 業務時間外の施設トラブル等は、警備室（内線999）までご連絡ください。
 `;
 
-const SYSTEM_PROMPT = `\u3042\u306a\u305f\u306fTEsJapan\u306e\u7dcf\u52d9\u90e8\u62c5\u5f53\u30a2\u30b7\u30b9\u30bf\u30f3\u30c8\u3067\u3059\u3002
-\u4ee5\u4e0b\u306e\u300c\u793e\u5185FAQ\u30fb\u8cc7\u6599\u300d\u306e\u5185\u5bb9\u3060\u3051\u3092\u6839\u62e0\u306b\u3057\u3066\u3001\u793e\u54e1\u306e\u8cea\u554f\u306b\u65e5\u672c\u8a9e\u3067\u7b54\u3048\u3066\u304f\u3060\u3055\u3044\u3002
-
-\u3010\u91cd\u8981\u306a\u30eb\u30fc\u30eb\u3011
-- \u8cc7\u6599\u306b\u66f8\u3044\u3066\u3044\u306a\u3044\u3053\u3068\u306f\u300c\u8cc7\u6599\u306b\u8a18\u8f09\u304c\u306a\u3044\u305f\u3081\u3001\u7dcf\u52d9\u90e8\uff08\u5185\u7dda\uff1a120\uff09\u306b\u304a\u554f\u3044\u5408\u308f\u305b\u304f\u3060\u3055\u3044\u300d\u3068\u7b54\u3048\u308b
-- \u56de\u7b54\u306f\u7c21\u6f54\u306b\u3001\u3067\u3082\u5fc5\u8981\u306a\u60c5\u5831\u306f\u6f0f\u3089\u3055\u305a\u4f1d\u3048\u308b
-- \u89aa\u3057\u307f\u3084\u3059\u3044\u4e01\u5be7\u306a\u656c\u8a9e\u3067\u7b54\u3048\u308b
-
-\u3010\u793e\u5185FAQ\u30fb\u8cc7\u6599\u3011
-${FAQ_DATA}`;
-
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-const chatArea  = document.getElementById('chatArea');
+// ──ea');
 const userInput = document.getElementById('userInput');
 const sendBtn   = document.getElementById('sendBtn');
 
@@ -318,16 +320,15 @@ function appendMessage(role, text, isError = false, imageFile = '') {
   div.className = `message ${role}`;
   const av = document.createElement('div');
   av.className = 'avatar';
-  av.textContent = role === 'user' ? '\u{1f464}' : '\u{1f916}';
+  av.textContent = role === 'user' ? '👤' : '🤖';
   const bubble = document.createElement('div');
   bubble.className = 'bubble' + (isError ? ' error' : '');
   bubble.textContent = text;
-  // \u753b\u50cf\u304c\u3042\u308c\u3070\u8868\u793a
   if (imageFile) {
     const img = document.createElement('img');
     img.src = IMAGE_DATA[imageFile] || `images/${imageFile}`;
     img.className = 'faq-image';
-    img.alt = '\u53c2\u8003\u753b\u50cf';
+    img.alt = '参考画像';
     img.onerror = () => img.style.display = 'none';
     bubble.appendChild(img);
   }
@@ -341,7 +342,7 @@ function appendTyping() {
   const div = document.createElement('div');
   div.className = 'message bot'; div.id = 'typingIndicator';
   const av = document.createElement('div');
-  av.className = 'avatar'; av.textContent = '\u{1f916}';
+  av.className = 'avatar'; av.textContent = '🤖';
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
   bubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
@@ -368,24 +369,23 @@ async function sendMessage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        question: SYSTEM_PROMPT + '\n\n\u793e\u54e1\u304b\u3089\u306e\u8cea\u554f: ' + text
+        question: SYSTEM_PROMPT + '\n\n社員からの質問: ' + text
       })
     });
 
     removeTyping();
     if (!res.ok) {
-      appendMessage('bot', `\u26a0\ufe0f \u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f\uff08${res.status}\uff09\u3002\u3057\u3070\u3089\u304f\u5f85\u3063\u3066\u304b\u3089\u518d\u8a66\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002`, true);
+      appendMessage('bot', `⚠️ エラーが発生しました（${res.status}）。しばらく待ってから再試行してください。`, true);
     } else {
       const data = await res.json();
-      // \u8cea\u554f\u306b\u5bfe\u5fdc\u3059\u308b\u753b\u50cf\u3092\u691c\u7d22
       const imageFile = Object.keys(IMAGE_MAP).find(q => text.includes(q) || q.includes(text))
         ? IMAGE_MAP[Object.keys(IMAGE_MAP).find(q => text.includes(q) || q.includes(text))]
         : '';
-      appendMessage('bot', data.answer || '\u56de\u7b54\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\u3002', false, imageFile);
+      appendMessage('bot', data.answer || '回答を取得できませんでした。', false, imageFile);
     }
   } catch (err) {
     removeTyping();
-    appendMessage('bot', '\u26a0\ufe0f \u901a\u4fe1\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f\u3002\u30a4\u30f3\u30bf\u30fc\u30cd\u30c3\u30c8\u63a5\u7d9a\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002', true);
+    appendMessage('bot', '⚠️ 通信エラーが発生しました。インターネット接続を確認してください。', true);
   }
 
   sendBtn.disabled = false;
