@@ -221,9 +221,21 @@ const WORKER_URL = 'https://tesjapan-claude-proxy.tesjapan-gk.workers.dev';
 
 // ── 画像マッピング（Q&Aに対応する画像ファイル名）──
 // Excelの「画像ファイル名」列に入力した内容を以下に追加してください
+const IMAGE_DATA = {
+  'bippinndana.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzRBOTBEOSIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjM4MCIgaGVpZ2h0PSIxODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwMCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiPuWCmeWTgeajmjwvdGV4dD48dGV4dCB4PSIyMDAiIHk9IjEyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCI+77yI44Kt44Oj44OT44ON44OD44OIQu+8iTwvdGV4dD48L3N2Zz4=',
+  'kaigishitsu.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzVCQUQ2RiIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjM4MCIgaGVpZ2h0PSIxODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwMCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiPuS8muitsOWupDwvdGV4dD48dGV4dCB4PSIyMDAiIHk9IjEyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCI+5LqI57SE5pa55rOVPC90ZXh0Pjwvc3ZnPg==',
+ypaper.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0U4QTgzOCIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjM4MCIgaGVpZ2h0PSIxODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwMCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiPuOCs+ODlOODvOeUqOe0mTwvdGV4dD48dGV4dCB4PSIyMDAiIHk9IjEyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCI+44K544OI44OD44Kr44O8PC90ZXh0Pjwvc3ZnPg==',
+  'soumu.jpg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzlCNTlCNiIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjM4MCIgaGVpZ2h0PSIxODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwMCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiPu總5213iemUjjwvdGV4dD48dGV4dCB4PSIyMDAiIHk9IjEyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCI+MumipDwvdGV4dD48L3N2Zz4=',
+};
 const IMAGE_MAP = {
-  // 例：'コピー用紙はどこにありますか？': 'copy-paper.jpg',
-  // 例：'備品棚はどこですか？': 'bihin-dana.jpg',
+  'ボールペン': 'bippinndana.jpg',
+  '付箋': 'bippinndana.jpg',
+  '封筒': 'bippinndana.jpg',
+  'コピー用紙': 'copypaper.jpg',
+  '会議室': 'kaigishitsu.jpg',
+  '貸出PC': 'kaigishitsu.jpg',
+  '総務部の連絡先': 'soumu.jpg',
+  '総務部に連絡': 'soumu.jpg',
 };
 
 // ── 総務部 FAQ データ ──
@@ -231,62 +243,64 @@ const FAQ_DATA = `
 === TEsJapan 総務部 社内FAQ ===
 
 【備品・消耗品】
+Q: ボールペンはどこにありますか？
+A: 2階総務部横の備品棚（キャビネットB）の上段にあります。黒・赤・青の3色を常備しています。なくなっていた場合は総務部（内線123）までご連絡ください。
+
 Q: コピー用紙はどこにありますか？
-A: コピー用紙は2階の備品庫（B棚・左側）に保管されています。A4・A3ともに在庫があります。残り少ない場合は総務部（内線：120）までご連絡ください。
+A: 各フロアのコピー機横のストッカーに補充用があります。在庫が少なくなったら総務部へご連絡ください。
 
-Q: ボールペンや文具を補充したい
-A: 文具類は1階総務棚（引き出し上段）から自由に取り出せます。在庫がなくなった場合は総務部に申請フォーム（Teamsの総務チャンネルに固定）から発注依頼をしてください。
+Q: 付箋・ホチキス針・クリップはどこですか？
+A: 2階総務部横の備品棚（キャビネットB）中段にあります。
 
-Q: コピー機・プリンターはどこにありますか？
-A: 各フロアに1台ずつ設置されています。1階：エントランス横、2階：会議室A前、3階：休憩室隣。トナー切れの場合は総務部（内線：120）へご連絡ください。
+Q: 封筒はどこにありますか？
+A: 2階総務部横の備品棚（キャビネットA）下段に、社用封筒（角2・長3）を常備しています。
 
-【申請・手続き】
-Q: 交通費精算はどうすればいいですか？
-A: 経費精算システム（社内ポータル→経費申請）から申請してください。締め日は毎月25日、翌月15日払いです。領収書は原本をスキャンして添付してください。
+【貸出機器】
+Q: 会議用の貸出PCの借り方を教えてください
+A: 総務部に事前予約が必要です。Teamsの「総務部」チャネルに「貸出PC予約」と投稿し、使用日・時間・用途を記載。当日2階総務部窓口で受取（社員証確認あり）。返却は使用当日中。
+
+Q: プロジェクターを借りたい
+A: 総務部にて貸出対応しています。Teamsの総務部チャネルから予約してください。HDMI・VGA両対応のモデルです。
+
+Q: ポケットWi-Fiを借りたい
+A: 出張用のポケットWi-Fiは総務部で3台管理しています。出張申請時に合わせて総務部へご連絡ください。なお、6Fのパスワードは〇〇〇〇、7Fのパスワードは△△△△です。詳細は総務部（内線：120）までお問い合わせください。
+
+【会議室】
+Q: 会議室を予約したい
+A: Outlookの予定表から会議室リソース（2F-大会議室、2F-小会議室A、3F-打合せスペース）を選択して予約してください。当日の空室は総務部内線123で確認できます。
+
+Q: 会議室でお茶を出したい
+A: 来客用のペットボトル茶・コーヒーは2階総務部横の給湯室に用意しています。自由にお使いください。
+
+【各種申請】
+Q: 交通費精算の方法を教えてください
+A: 月末までに経費精算システム（SAP Concur）から申請してください。領収書は写真添付で可。5,000円を超える場合は原本を総務部に提出してください。
 
 Q: 名刺を発注したい
-A: 名刺発注フォーム（社内ポータル→総務申請→名刺発注）から申請してください。初回注文は100枚単位、約1週間で納品されます。
+A: 総務部指定のフォーム（SharePoint「総務申請」サイト内）から申請してください。発注から受取まで約5営業日です。
 
-Q: 出張申請の手順を教えてください
-A: 出張の3営業日前までにTeams「総務チャンネル」の出張申請フォームを提出してください。上長の承認後、総務部が手配します。宿泊費の上限は1泊15,000円です。
+Q: 出張申請の方法を教えてください
+A: SharePoint「総務申請」サイト内の「出張申請書」を提出してください。承認後、交通・宿泊の手配は各自で行い、精算は経費精算システムから行います。
 
-【施設・設備】
-Q: 会議室の予約方法を教えてください
-A: 社内ポータル→会議室予約から予約できます。会議室は1階（A・B）、2階（C・D・E）の5部屋あります。最大2週間前から予約可能です。
+Q: 慶弔金の申請方法を教えてください
+A: 総務部までメール（soumu@tesjapan.co.jp）でご連絡ください。申請書をお送りします。
+
+【施設・入退館】
+Q: 社員証を紛失しました
+A: すぐに総務部（内線123）にご連絡ください。再発行には申請書の提出が必要で、発行まで約3営業日かかります。
 
 Q: 駐車場を使いたい
-A: 駐車場は事前申請制です。総務部に「駐車場利用申請書」を提出し、空きがある場合に利用できます。
+A: 来客用駐車場は3台分あります。事前に総務部へ予約してください。社員用駐車場は契約制です。
 
-Q: 郵便・宅配便を送りたい
-A: 発送物は1階総務室の「発送BOX」に入れてください。午後4時までに入れると当日発送されます。
-
-Q: WiFiのパスワードは？
-A: 6Fのパスワードは〇〇〇〇、7Fのパスワードは△△△△です。詳細は総務部（内線：120）までお問い合わせください。
-
-Q: WiFiのパスワードは？
-A: 6Fのパスワードは〇〇〇〇、7Fのパスワードは△△△△です。詳細は総務部（内線：120）までお問い合わせください。
-
-【緊急・その他】
-Q: 救急箱・AEDはどこにありますか？
-A: 救急箱は各フロアの給湯室に設置。AEDは1階エントランス正面の壁に設置されています。
-
+【連絡先】
 Q: 総務部の連絡先を教えてください
-A: 内線：120、メール：soumu@tesjapan.co.jp、受付時間：平日9:00〜18:00
+A: 内線：123　メール：soumu@tesjapan.co.jp　窓口：2階 総務部　受付時間：平日 9:00〜17:30
+
+Q: 緊急時の連絡先を教えてください
+A: 業務時間外の施設トラブル等は、警備室（内線999）までご連絡ください。
 `;
 
-const SYSTEM_PROMPT = `あなたはTEsJapanの総務部担当アシスタントです。
-以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。
-
-【重要なルール】
-- 資料に書いていないことは「資料に記載がないため、総務部（内線：120）にお問い合わせください」と答える
-- 回答は簡潔に、でも必要な情報は漏らさず伝える
-- 親しみやすい丁寧な敬語で答える
-
-【社内FAQ・資料】
-${FAQ_DATA}`;
-
-// ────────────────────────────────
-const chatArea  = document.getElementById('chatArea');
+// ──ea');
 const userInput = document.getElementById('userInput');
 const sendBtn   = document.getElementById('sendBtn');
 
@@ -310,10 +324,9 @@ function appendMessage(role, text, isError = false, imageFile = '') {
   const bubble = document.createElement('div');
   bubble.className = 'bubble' + (isError ? ' error' : '');
   bubble.textContent = text;
-  // 画像があれば表示
   if (imageFile) {
     const img = document.createElement('img');
-    img.src = `images/${imageFile}`;
+    img.src = IMAGE_DATA[imageFile] || `images/${imageFile}`;
     img.className = 'faq-image';
     img.alt = '参考画像';
     img.onerror = () => img.style.display = 'none';
@@ -365,7 +378,6 @@ async function sendMessage() {
       appendMessage('bot', `⚠️ エラーが発生しました（${res.status}）。しばらく待ってから再試行してください。`, true);
     } else {
       const data = await res.json();
-      // 質問に対応する画像を検索
       const imageFile = Object.keys(IMAGE_MAP).find(q => text.includes(q) || q.includes(text))
         ? IMAGE_MAP[Object.keys(IMAGE_MAP).find(q => text.includes(q) || q.includes(text))]
         : '';
