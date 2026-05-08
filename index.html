@@ -218,75 +218,48 @@
 <script>
 // ── Cloudflare Worker の URL（APIキーはここに書かない）──
 const WORKER_URL = 'https://tesjapan-claude-proxy.tesjapan-gk.workers.dev';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnxltNYiyqWvYognZ-TFaxoqsp3MK_ltLtu5sOCJNkXCkPb7_Qcln4_bm2di6w5_zzo8VAKJaF-9vv/pub?gid=1359394388&single=true&output=csv';
 
 // ── 画像マッピング（Q&Aに対応する画像ファイル名）──
 // Excelの「画像ファイル名」列に入力した内容を以下に追加してください
 const IMAGE_DATA = {};
 const IMAGE_MAP = {};
 
-// ── 総務部 FAQ データ ──
-const FAQ_DATA = `
-=== TEsJapan 総務部 社内FAQ ===
+// ── GoogleスプレッドシートからFAQを読み込む ──
+const SYSTEM_PROMPT_BASE = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは「資料に記載がないため、総務部（内線：123）にお問い合わせください」と答える\n- 回答は簡潔に、でも必要な情報は漏らさず会える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n';
+let SYSTEM_PROMPT = SYSTEM_PROMPT_BASE;
 
-【備品・消耗品】
-Q: ボールペンはどこにありますか？
-A: 2階総務部横の備品棚（キャビネットB）の上段にあります。黒・赤・青の3色を常備しています。なくなっていた場合は総務部（内線123）までご連絡ください。
+function parseCSVLine(line) {
+  const result = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') { inQ = !inQ; }
+    else if (line[i] === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += line[i]; }
+  }
+  result.push(cur);
+  return result;
+}
 
-Q: コピー用紙はどこにありますか？
-A: 各フロアのコピー機横のストッカーに補充用があります。在庫が少なくなったら総務部へご連絡ください。
+(async () => {
+  try {
+    const r = await fetch(SHEET_URL);
+    const csv = await r.text();
+    const lines = csv.split('\n').slice(1);
+    let faq = '';
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const parts = parseCSVLine(line);
+      if (parts.length >= 2 && parts[0].trim()) {
+        faq += 'Q: ' + parts[0].trim() + '\nA: ' + parts[1].trim() + '\n\n';
+      }
+    }
+    SYSTEM_PROMPT = SYSTEM_PROMPT_BASE + faq;
+  } catch(e) {
+    console.error('FAQ読み込みエラー:', e);
+  }
+})();
 
-Q: 付箋・ホチキス針・クリップはどこですか？
-A: 2階総務部横の備品棚（キャビネットB）中段にあります。
 
-Q: 封筒はどこにありますか？
-A: 2階総務部横の備品棚（キャビネットA）下段に、社用封筒（角2・長3）を常備しています。
-
-【貸出機器】
-Q: 会議用の貸出PCの借り方を教えてください
-A: 総務部に事前予約が必要です。Teamsの「総務部」チャネルに「貸出PC予約」と投稿し、使用日・時間・用途を記載。当日2階総務部窓口で受取（社員証確認あり）。返却は使用当日中。
-
-Q: プロジェクターを借りたい
-A: 総務部にて貸出対応しています。Teamsの総務部チャネルから予約してください。HDMI・VGA両対応のモデルです。
-
-Q: ポケットWi-Fiを借りたい
-A: 出張用のポケットWi-Fiは総務部で3台管理しています。出張申請時に合わせて総務部へご連絡ください。なお、6Fのパスワードは〇〇〇〇、7Fのパスワードは△△△△です。詳細は総務部（内線：120）までお問い合わせください。
-
-【会議室】
-Q: 会議室を予約したい
-A: Outlookの予定表から会議室リソース（2F-大会議室、2F-小会議室A、3F-打合せスペース）を選択して予約してください。当日の空室は総務部内線123で確認できます。
-
-Q: 会議室でお茶を出したい
-A: 来客用のペットボトル茶・コーヒーは2階総務部横の給湯室に用意しています。自由にお使いください。
-
-【各種申請】
-Q: 交通費精算の方法を教えてください
-A: 月末までに経費精算システム（SAP Concur）から申請してください。領収書は写真添付で可。5,000円を超える場合は原本を総務部に提出してください。
-
-Q: 名刺を発注したい
-A: 総務部指定のフォーム（SharePoint「総務申請」サイト内）から申請してください。発注から受取まで約5営業日です。
-
-Q: 出張申請の方法を教えてください
-A: SharePoint「総務申請」サイト内の「出張申請書」を提出してください。承認後、交通・宿泊の手配は各自で行い、精算は経費精算システムから行います。
-
-Q: 慶弔金の申請方法を教えてください
-A: 総務部までメール（soumu@tesjapan.co.jp）でご連絡ください。申請書をお送りします。
-
-【施設・入退館】
-Q: 社員証を紛失しました
-A: すぐに総務部（内線123）にご連絡ください。再発行には申請書の提出が必要で、発行まで約3営業日かかります。
-
-Q: 駐車場を使いたい
-A: 来客用駐車場は3台分あります。事前に総務部へ予約してください。社員用駐車場は契約制です。
-
-【連絡先】
-Q: 総務部の連絡先を教えてください
-A: 内線：123　メール：soumu@tesjapan.co.jp　窓口：2階 総務部　受付時間：平日 9:00〜17:30
-
-Q: 緊急時の連絡先を教えてください
-A: 業務時間外の施設トラブル等は、警備室（内線999）までご連絡ください。
-`;
-
-const SYSTEM_PROMPT = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは「資料に記載がないため、総務部（内線：120）にお問い合わせください」と答える\n- 回答は簡潔に、でも必要な情報は漏らさず会える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n' + FAQ_DATA;
 const chatArea = document.getElementById('chatArea');
 const userInput = document.getElementById('userInput');
 const sendBtn   = document.getElementById('sendBtn');
