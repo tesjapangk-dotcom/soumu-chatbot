@@ -186,7 +186,7 @@
   <div class="header-icon">🤖</div>
   <div class="header-text">
     <h1>総務部アシスタント</h1>
-    <p>備品・申請・施設に関する質問はこちらへ</p>
+    <p>備品・申請・施設・仕訳に関する質問はこちらへ</p>
   </div>
   <div class="status-dot"><div class="dot"></div>稼働中</div>
 </div>
@@ -195,7 +195,7 @@
   <div class="welcome" id="welcomeMsg">
     <div class="icon">💬</div>
     <h2>総務部アシスタントへようこそ！</h2>
-    <p>備品の場所・申請方法・会議室予約など<br>
+    <p>備品の場所・申請方法・会議室予約・仕訳科目など<br>
     総務部に関する質問を何でも聞いてください。<br><br>
     下の入力欄に質問をどうぞ！</p>
   </div>
@@ -207,10 +207,11 @@
   <button class="quick-btn" onclick="sendQuick('会議室の予約方法を教えてください')">📅 会議室予約</button>
   <button class="quick-btn" onclick="sendQuick('交通費精算はどうすればいいですか？')">💴 交通費精算</button>
   <button class="quick-btn" onclick="sendQuick('総務部の連絡先を教えてください')">📞 総務部連絡先</button>
+  <button class="quick-btn" onclick="sendQuick('通勤手当の仕訳科目と消費税区分を教えてください')">📒 仕訳科目を調べる</button>
 </div>
 
 <div class="input-area">
-  <textarea id="userInput" placeholder="質問を入力してください（例：名刺を発注したい）"
+  <textarea id="userInput" placeholder="質問を入力してください（例：交際費AとBの違いは？）"
     rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
   <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
 </div>
@@ -218,15 +219,21 @@
 <script>
 // ── Cloudflare Worker の URL（APIキーはここに書かない）──
 const WORKER_URL = 'https://tesjapan-claude-proxy.tesjapan-gk.workers.dev';
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnxltNYiyqWvYognZ-TFaxoqsp3MK_ltLtu5sOCJNkXCkPb7_Qcln4_bm2di6w5_zzo8VAKJaF-9vv/pub?gid=1359394388&single=true&output=csv';
 
-// ── 画像マッピング（Q&Aに対応する画像ファイル名）──
-// Excelの「画像ファイル名」列に入力した内容を以下に追加してください
+// ── スプレッドシートのCSV URL（複数シート対応）──
+// 列構成: A=カテゴリ / B=質問(Q) / C=回答(A) / D=有効/無効
+const SHEET_URLS = [
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnxltNYiyqWvYognZ-TFaxoqsp3MK_ltLtu5sOCJNkXCkPb7_Qcln4_bm2di6w5_zzo8VAKJaF-9vv/pub?gid=1359394388&single=true&output=csv',
+  // 仕訳FAQ用シートを追加する場合はここにURLを追加
+  // 'https://docs.google.com/spreadsheets/.../pub?gid=XXXXXXXX&single=true&output=csv',
+];
+
+// ── 画像マッピング ──
 const IMAGE_DATA = {};
 const IMAGE_MAP = {};
 
-// ── GoogleスプレッドシートからFAQを読み込む ──
-const SYSTEM_PROMPT_BASE = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは「資料に記載がないため、総務部（内線：123）にお問い合わせください」と答える\n- 回答は簡潔に、でも必要な情報は漏らさず会える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n';
+// ── システムプロンプト ──
+const SYSTEM_PROMPT_BASE = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは「資料に記載がないため、総務部（内線：123）にお問い合わせください」と答える\n- 回答は簡潔に、でも必要な情報は漏らさず答える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n';
 let SYSTEM_PROMPT = SYSTEM_PROMPT_BASE;
 
 function parseCSVLine(line) {
@@ -240,20 +247,25 @@ function parseCSVLine(line) {
   return result;
 }
 
+// 複数シートをまとめて読み込む
 (async () => {
   try {
-    const r = await fetch(SHEET_URL);
-    const csv = await r.text();
-    const lines = csv.split('\n').slice(1);
     let faq = '';
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      const parts = parseCSVLine(line);
-      if (parts.length >= 2 && parts[0].trim()) {
-        faq += 'Q: ' + parts[0].trim() + '\nA: ' + parts[1].trim() + '\n\n';
+    for (const url of SHEET_URLS) {
+      const r = await fetch(url);
+      const csv = await r.text();
+      const lines = csv.split('\n').slice(1); // 1行目（ヘッダー）をスキップ
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const parts = parseCSVLine(line);
+        // B列(parts[1])=質問, C列(parts[2])=回答, D列(parts[3])=有効/無効
+        if (parts.length >= 4 && parts[3].trim() === '有効' && parts[1].trim()) {
+          faq += 'Q: ' + parts[1].trim() + '\nA: ' + parts[2].trim() + '\n\n';
+        }
       }
     }
     SYSTEM_PROMPT = SYSTEM_PROMPT_BASE + faq;
+    console.log('FAQ読み込み完了');
   } catch(e) {
     console.error('FAQ読み込みエラー:', e);
   }
@@ -354,3 +366,5 @@ async function sendMessage() {
 </script>
 </body>
 </html>
+
+
