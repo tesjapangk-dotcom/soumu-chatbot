@@ -95,6 +95,15 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     display: block;
   }
+  .faq-video {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: block;
+  }
+  iframe.faq-video { aspect-ratio: 16 / 9; border: none; }
   .typing-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
   .typing-dots span {
     width: 8px; height: 8px; border-radius: 50%;
@@ -196,7 +205,8 @@
     <div class="icon">💬</div>
     <h2>総務部アシスタントへようこそ！</h2>
     <p>備品の場所・申請方法・会議室予約・仕訳科目など<br>
-    総務部に関する質問を何でも聞いてください。<br><br>
+    総務部に関する質問を何でも聞いてください。<br>
+    操作手順がある質問には画像や動画もあわせて表示されます。<br><br>
     下の入力欄に質問をどうぞ！</p>
   </div>
 </div>
@@ -221,14 +231,17 @@
 const WORKER_URL = 'https://tesjapan-claude-proxy.tesjapan-gk.workers.dev';
 
 // ── スプレッドシートのCSV URL（複数シート対応）──
-// 列構成: A=カテゴリ / B=質問(Q) / C=回答(A) / D=有効/無効
+// 列構成: A=カテゴリ / B=質問(Q) / C=回答(A) / D=有効/無効 / E=備考 / F=画像ファイル名 / G=動画ファイル名(またはYouTube等のURL)
 const SHEET_URLS = [
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vS58EhGfnsQGKLU8GdsY8QTEhIz5zBrnrrPPQSlB0JBcUl2gmZjvuERqUrglZkf6adKx8q6CkoAy6rR/pub?gid=0&single=true&output=csv',
 ];
 
-// ── 画像マッピング ──
+// ── 画像・動画データ（ファイル名の代わりに直接Base64等を埋め込みたい場合はここに追加）──
 const IMAGE_DATA = {};
-const IMAGE_MAP = {};
+const VIDEO_DATA = {};
+
+// スプレッドシートから読み込んだFAQ一覧（画像・動画の紐付け判定に使用）
+let FAQ_DATA = [];
 
 // ── システムプロンプト ──
 const SYSTEM_PROMPT_BASE = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは「資料に記載がないため、総務部（内線：81223）にお問い合わせください」と答える\n- 仕訳科目・消費税区分・経費・財務に関する質問への回答末尾は「ご不明な点がございましたら、財務部（内線：81257）までお問合せください。」とする\n- 回答は簡潔に、でも必要な情報は漏らさず答える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n';
@@ -256,18 +269,82 @@ function parseCSVLine(line) {
       for (const line of lines) {
         if (!line.trim()) continue;
         const parts = parseCSVLine(line);
-        // B列(parts[1])=質問, C列(parts[2])=回答, D列(parts[3])=有効/無効
+        // B列(parts[1])=質問, C列(parts[2])=回答, D列(parts[3])=有効/無効, F列(parts[5])=画像, G列(parts[6])=動画
         if (parts.length >= 4 && parts[3].trim() === '有効' && parts[1].trim()) {
-          faq += 'Q: ' + parts[1].trim() + '\nA: ' + parts[2].trim() + '\n\n';
+          const q = parts[1].trim();
+          const a = parts[2].trim();
+          const image = (parts[5] || '').trim();
+          const video = (parts[6] || '').trim();
+          faq += 'Q: ' + q + '\nA: ' + a + '\n\n';
+          FAQ_DATA.push({ q, a, image, video });
         }
       }
     }
     SYSTEM_PROMPT = SYSTEM_PROMPT_BASE + faq;
-    console.log('FAQ読み込み完了');
+    console.log('FAQ読み込み完了（' + FAQ_DATA.length + '件、画像/動画付き' + FAQ_DATA.filter(r => r.image || r.video).length + '件）');
   } catch(e) {
     console.error('FAQ読み込みエラー:', e);
   }
 })();
+
+// ── 質問文からFAQ行（画像・動画）を推定するマッチング ──
+// FAQの質問(Q)から定型的な聞き方（「〜を教えてください」等）を取り除いて核となる語句を作り、
+// ユーザーの入力文とその語句が互いに含み合うかで判定する（誤って無関係な画像を出さないよう、
+// 部分一致だけの緩い判定は「他に候補がない場合の最終手段」としてのみ使う）
+function coreKeyword(q) {
+  let s = q.trim();
+  const tails = [
+    /について教えてください[。.!?？]*$/,
+    /の(方法|やり方|手順)を教えてください[。.!?？]*$/,
+    /を教えてください[。.!?？]*$/,
+    /はどこにありますか[。.!?？]*$/,
+    /はどこですか[。.!?？]*$/,
+    /はどうすればいいですか[。.!?？]*$/,
+    /はどうすればよいですか[。.!?？]*$/,
+    /(したい|し方)[。.!?？]*$/,
+    /は(何|なん)ですか[。.!?？]*$/,
+    /を(使いたい|利用したい)[。.!?？]*$/,
+    /[。.!?？]+$/,
+  ];
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const re of tails) {
+      const next = s.replace(re, '');
+      if (next !== s) { s = next; changed = true; }
+    }
+  }
+  return s.trim();
+}
+function primaryNoun(key) {
+  return (key.split(/[のをがはでとに]/)[0] || '').trim();
+}
+function findVisualForAnswer(userText) {
+  const norm = userText.replace(/\s+/g, '');
+  // 1段階目: 核となる語句どうしの包含関係（双方向）で厳密に判定
+  let best = null, bestLen = 0;
+  for (const row of FAQ_DATA) {
+    if (!row.image && !row.video) continue;
+    const key = coreKeyword(row.q);
+    if (key.length < 2) continue;
+    if (norm.includes(key) || key.includes(norm)) {
+      if (key.length > bestLen) { bestLen = key.length; best = row; }
+    }
+  }
+  if (best) return best;
+  // 2段階目: 1段階目で見つからない場合のみ、主要な名詞句だけで緩く判定
+  const candidates = [];
+  for (const row of FAQ_DATA) {
+    if (!row.image && !row.video) continue;
+    const noun = primaryNoun(coreKeyword(row.q));
+    if (noun.length >= 2 && norm.includes(noun)) candidates.push({ row, len: noun.length });
+  }
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => b.len - a.len);
+  // 候補が複数タイで並ぶ場合は誤表示を避けるため何も返さない
+  if (candidates.length > 1 && candidates[0].len === candidates[1].len) return null;
+  return candidates[0].row;
+}
 
 
 const chatArea = document.getElementById('chatArea');
@@ -283,7 +360,7 @@ function handleKey(e) {
 }
 function sendQuick(text) { userInput.value = text; sendMessage(); }
 
-function appendMessage(role, text, isError = false, imageFile = '') {
+function appendMessage(role, text, isError = false, imageFile = '', videoFile = '') {
   const w = document.getElementById('welcomeMsg');
   if (w) w.remove();
   const div = document.createElement('div');
@@ -301,6 +378,24 @@ function appendMessage(role, text, isError = false, imageFile = '') {
     img.alt = '参考画像';
     img.onerror = () => img.style.display = 'none';
     bubble.appendChild(img);
+  }
+  if (videoFile) {
+    if (/^https?:\/\//.test(videoFile)) {
+      // YouTube等の外部URL（埋め込み用URL: 例 https://www.youtube.com/embed/xxxx）
+      const iframe = document.createElement('iframe');
+      iframe.src = videoFile;
+      iframe.className = 'faq-video';
+      iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      bubble.appendChild(iframe);
+    } else {
+      const video = document.createElement('video');
+      video.src = VIDEO_DATA[videoFile] || `videos/${videoFile}`;
+      video.className = 'faq-video';
+      video.controls = true;
+      video.onerror = () => video.style.display = 'none';
+      bubble.appendChild(video);
+    }
   }
   div.appendChild(av);
   div.appendChild(bubble);
@@ -348,10 +443,9 @@ async function sendMessage() {
       appendMessage('bot', `⚠️ エラーが発生しました（${res.status}）。しばらく待ってから再試行してください。`, true);
     } else {
       const data = await res.json();
-      const imageFile = Object.keys(IMAGE_MAP).find(q => text.includes(q) || q.includes(text))
-        ? IMAGE_MAP[Object.keys(IMAGE_MAP).find(q => text.includes(q) || q.includes(text))]
-        : '';
-      appendMessage('bot', data.answer || '回答を取得できませんでした。', false, imageFile);
+      const answerText = data.answer || '回答を取得できませんでした。';
+      const visual = findVisualForAnswer(text);
+      appendMessage('bot', answerText, false, visual ? visual.image : '', visual ? visual.video : '');
     }
   } catch (err) {
     removeTyping();
