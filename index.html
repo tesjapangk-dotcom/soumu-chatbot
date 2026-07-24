@@ -230,6 +230,12 @@
 // ── Cloudflare Worker の URL（APIキーはここに書かない）──
 const WORKER_URL = 'https://tesjapan-claude-proxy.tesjapan-gk.workers.dev';
 
+// ── 未回答の質問をスプレッドシートに書き足すGoogle Apps Script（Webアプリ）のURL ──
+const APPEND_URL = 'https://script.google.com/macros/s/AKfycbwCFkACr2rkWmYh9Cig3E2xgXUgCD_pHpRcSooXvCiHUH7ijvBpKU_UY6SlyvCKyeEkTg/exec';
+
+// ── FAQに無い質問が来たときにClaudeへ出力させる目印（この文字列を検知して固定メッセージに差し替える）──
+const NOT_FOUND_TAG = '[[NOT_FOUND]]';
+
 // ── スプレッドシートのCSV URL（複数シート対応）──
 // 列構成: A=カテゴリ / B=質問(Q) / C=回答(A) / D=有効/無効 / E=備考 / F=画像ファイル名 / G=動画ファイル名(またはYouTube等のURL)
 const SHEET_URLS = [
@@ -244,7 +250,7 @@ const VIDEO_DATA = {};
 let FAQ_DATA = [];
 
 // ── システムプロンプト ──
-const SYSTEM_PROMPT_BASE = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは「資料に記載がないため、総務部（内線：81223）にお問い合わせください」と答える\n- 仕訳科目・消費税区分・経費・財務に関する質問への回答末尾は「ご不明な点がございましたら、財務部（内線：81257）までお問合せください。」とする\n- 回答は簡潔に、でも必要な情報は漏らさず答える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n';
+const SYSTEM_PROMPT_BASE = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは、他の文章を一切書かず、正確に次の1行だけを出力する：[[NOT_FOUND]]\n- 仕訳科目・消費税区分・経費・財務に関する質問への回答末尾は「ご不明な点がございましたら、財務部（内線：81257）までお問合せください。」とする\n- 回答は簡潔に、でも必要な情報は漏らさず答える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n';
 let SYSTEM_PROMPT = SYSTEM_PROMPT_BASE;
 
 function parseCSVLine(line) {
@@ -420,6 +426,16 @@ function removeTyping() {
   if (el) el.remove();
 }
 
+// ── 未回答だった質問をGoogle Apps Script経由でスプレッドシートに追記（画面には結果を表示しない）──
+function reportUnknownQuestion(question) {
+  if (!APPEND_URL || APPEND_URL.indexOf('PLACEHOLDER') !== -1) return;
+  fetch(APPEND_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ question })
+  }).catch(err => console.error('未回答質問の記録に失敗:', err));
+}
+
 async function sendMessage() {
   const text = userInput.value.trim();
   if (!text) return;
@@ -444,8 +460,14 @@ async function sendMessage() {
     } else {
       const data = await res.json();
       const answerText = data.answer || '回答を取得できませんでした。';
-      const visual = findVisualForAnswer(text);
-      appendMessage('bot', answerText, false, visual ? visual.image : '', visual ? visual.video : '');
+      const isUnknown = answerText.includes(NOT_FOUND_TAG) || answerText.includes('資料に記載がない');
+      if (isUnknown) {
+        appendMessage('bot', '申し訳ない！まだその答えを学習していないです。総務まで（内線223）お問い合わせください。次回までには学びます！');
+        reportUnknownQuestion(text);
+      } else {
+        const visual = findVisualForAnswer(text);
+        appendMessage('bot', answerText, false, visual ? visual.image : '', visual ? visual.video : '');
+      }
     }
   } catch (err) {
     removeTyping();
