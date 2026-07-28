@@ -104,6 +104,22 @@
     display: block;
   }
   iframe.faq-video { aspect-ratio: 16 / 9; border: none; }
+  .faq-doc {
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #e3f0ff;
+    color: #1a3a5c;
+    border: 1px solid #b3d4f5;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .faq-doc:hover { background: #cfe4fb; }
   .typing-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
   .typing-dots span {
     width: 8px; height: 8px; border-radius: 50%;
@@ -206,7 +222,7 @@
     <h2>総務部アシスタントへようこそ！</h2>
     <p>備品の場所・申請方法・会議室予約・仕訳科目など<br>
     総務部に関する質問を何でも聞いてください。<br>
-    操作手順がある質問には画像や動画もあわせて表示されます。<br><br>
+    操作手順がある質問には画像・動画・資料PDFもあわせて表示されます。<br><br>
     下の入力欄に質問をどうぞ！</p>
   </div>
 </div>
@@ -237,7 +253,7 @@ const APPEND_URL = 'https://script.google.com/macros/s/AKfycbwCFkACr2rkWmYh9Cig3
 const NOT_FOUND_TAG = '[[NOT_FOUND]]';
 
 // ── スプレッドシートのCSV URL（複数シート対応）──
-// 列構成: A=カテゴリ / B=質問(Q) / C=回答(A) / D=有効/無効 / E=備考 / F=画像ファイル名 / G=動画ファイル名(またはYouTube等のURL)
+// 列構成: A=カテゴリ / B=質問(Q) / C=回答(A) / D=有効/無効 / E=備考 / F=画像ファイル名 / G=動画ファイル名(またはYouTube等のURL) / H=資料ファイル名またはURL(Google DriveのPDF共有リンク等)
 const SHEET_URLS = [
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vS58EhGfnsQGKLU8GdsY8QTEhIz5zBrnrrPPQSlB0JBcUl2gmZjvuERqUrglZkf6adKx8q6CkoAy6rR/pub?gid=0&single=true&output=csv',
 ];
@@ -275,19 +291,20 @@ function parseCSVLine(line) {
       for (const line of lines) {
         if (!line.trim()) continue;
         const parts = parseCSVLine(line);
-        // B列(parts[1])=質問, C列(parts[2])=回答, D列(parts[3])=有効/無効, F列(parts[5])=画像, G列(parts[6])=動画
+        // B列(parts[1])=質問, C列(parts[2])=回答, D列(parts[3])=有効/無効, F列(parts[5])=画像, G列(parts[6])=動画, H列(parts[7])=資料(PDF等)
         if (parts.length >= 4 && parts[3].trim() === '有効' && parts[1].trim()) {
           const q = parts[1].trim();
           const a = parts[2].trim();
           const image = (parts[5] || '').trim();
           const video = (parts[6] || '').trim();
+          const doc = (parts[7] || '').trim();
           faq += 'Q: ' + q + '\nA: ' + a + '\n\n';
-          FAQ_DATA.push({ q, a, image, video });
+          FAQ_DATA.push({ q, a, image, video, doc });
         }
       }
     }
     SYSTEM_PROMPT = SYSTEM_PROMPT_BASE + faq;
-    console.log('FAQ読み込み完了（' + FAQ_DATA.length + '件、画像/動画付き' + FAQ_DATA.filter(r => r.image || r.video).length + '件）');
+    console.log('FAQ読み込み完了（' + FAQ_DATA.length + '件、画像/動画/資料付き' + FAQ_DATA.filter(r => r.image || r.video || r.doc).length + '件）');
   } catch(e) {
     console.error('FAQ読み込みエラー:', e);
   }
@@ -330,7 +347,7 @@ function findVisualForAnswer(userText) {
   // 1段階目: 核となる語句どうしの包含関係（双方向）で厳密に判定
   let best = null, bestLen = 0;
   for (const row of FAQ_DATA) {
-    if (!row.image && !row.video) continue;
+    if (!row.image && !row.video && !row.doc) continue;
     const key = coreKeyword(row.q);
     if (key.length < 2) continue;
     if (norm.includes(key) || key.includes(norm)) {
@@ -341,7 +358,7 @@ function findVisualForAnswer(userText) {
   // 2段階目: 1段階目で見つからない場合のみ、主要な名詞句だけで緩く判定
   const candidates = [];
   for (const row of FAQ_DATA) {
-    if (!row.image && !row.video) continue;
+    if (!row.image && !row.video && !row.doc) continue;
     const noun = primaryNoun(coreKeyword(row.q));
     if (noun.length >= 2 && norm.includes(noun)) candidates.push({ row, len: noun.length });
   }
@@ -366,7 +383,7 @@ function handleKey(e) {
 }
 function sendQuick(text) { userInput.value = text; sendMessage(); }
 
-function appendMessage(role, text, isError = false, imageFile = '', videoFile = '') {
+function appendMessage(role, text, isError = false, imageFile = '', videoFile = '', docLink = '') {
   const w = document.getElementById('welcomeMsg');
   if (w) w.remove();
   const div = document.createElement('div');
@@ -402,6 +419,17 @@ function appendMessage(role, text, isError = false, imageFile = '', videoFile = 
       video.onerror = () => video.style.display = 'none';
       bubble.appendChild(video);
     }
+  }
+  if (docLink) {
+    // 資料(PDF等)はプレビュー埋め込みせず、新しいタブで開くリンクとして表示する
+    // （Google Driveの共有リンクはiframe埋め込みができないため）
+    const a = document.createElement('a');
+    a.href = docLink;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.className = 'faq-doc';
+    a.textContent = '📄 資料を見る';
+    bubble.appendChild(a);
   }
   div.appendChild(av);
   div.appendChild(bubble);
@@ -466,7 +494,7 @@ async function sendMessage() {
         reportUnknownQuestion(text);
       } else {
         const visual = findVisualForAnswer(text);
-        appendMessage('bot', answerText, false, visual ? visual.image : '', visual ? visual.video : '');
+        appendMessage('bot', answerText, false, visual ? visual.image : '', visual ? visual.video : '', visual ? visual.doc : '');
       }
     }
   } catch (err) {
