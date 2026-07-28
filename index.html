@@ -310,6 +310,31 @@ function parseCSVLine(line) {
   }
 })();
 
+// ── Google Drive/YouTubeの「普通の共有リンク」を、埋め込み表示できる形式に自動変換する ──
+// (総務の方が共有→リンクをコピーしただけの状態でF/G列に貼れるようにするため)
+function extractDriveFileId(url) {
+  let m = url.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+  if (m) return m[1];
+  m = url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+  return m ? m[1] : null;
+}
+function extractYouTubeId(url) {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{6,})/);
+  return m ? m[1] : null;
+}
+// 画像URL: DriveのリンクならGoogleユーザーコンテンツの直リンク形式に変換。それ以外(Unsplash等)はそのまま使う
+function toEmbeddableImageUrl(url) {
+  const driveId = extractDriveFileId(url);
+  return driveId ? `https://lh3.googleusercontent.com/d/${driveId}` : url;
+}
+// 動画URL: Driveのリンクは/previewのiframe埋め込み形式に、YouTubeの視聴リンクはembed形式に変換
+function toEmbeddableVideoUrl(url) {
+  const driveId = extractDriveFileId(url);
+  if (driveId) return `https://drive.google.com/file/d/${driveId}/preview`;
+  const ytId = extractYouTubeId(url);
+  return ytId ? `https://www.youtube.com/embed/${ytId}` : url;
+}
+
 // ── 質問文からFAQ行（画像・動画）を推定するマッチング ──
 // FAQの質問(Q)から定型的な聞き方（「〜を教えてください」等）を取り除いて核となる語句を作り、
 // ユーザーの入力文とその語句が互いに含み合うかで判定する（誤って無関係な画像を出さないよう、
@@ -396,7 +421,9 @@ function appendMessage(role, text, isError = false, imageFile = '', videoFile = 
   bubble.textContent = text;
   if (imageFile) {
     const img = document.createElement('img');
-    img.src = IMAGE_DATA[imageFile] || `images/${imageFile}`;
+    img.src = /^https?:\/\//.test(imageFile)
+      ? toEmbeddableImageUrl(imageFile)
+      : (IMAGE_DATA[imageFile] || `images/${imageFile}`);
     img.className = 'faq-image';
     img.alt = '参考画像';
     img.onerror = () => img.style.display = 'none';
@@ -404,9 +431,9 @@ function appendMessage(role, text, isError = false, imageFile = '', videoFile = 
   }
   if (videoFile) {
     if (/^https?:\/\//.test(videoFile)) {
-      // YouTube等の外部URL（埋め込み用URL: 例 https://www.youtube.com/embed/xxxx）
+      // Google Driveの共有リンクやYouTubeの視聴リンクを自動で埋め込み用URLに変換する
       const iframe = document.createElement('iframe');
-      iframe.src = videoFile;
+      iframe.src = toEmbeddableVideoUrl(videoFile);
       iframe.className = 'faq-video';
       iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
       iframe.allowFullscreen = true;
