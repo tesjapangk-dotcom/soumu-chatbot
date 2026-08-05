@@ -266,7 +266,7 @@ const VIDEO_DATA = {};
 let FAQ_DATA = [];
 
 // ── システムプロンプト ──
-const SYSTEM_PROMPT_BASE = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは、他の文章を一切書かず、正確に次の1行だけを出力する：[[NOT_FOUND]]\n- 仕訳科目・消費税区分・経費・財務に関する質問への回答末尾は「ご不明な点がございましたら、財務部（内線：81257）までお問合せください。」とする\n- 回答は簡潔に、でも必要な情報は漏らさず答える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n';
+const SYSTEM_PROMPT_BASE = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは、他の文章を一切書かず、正確に次の1行だけを出力する：[[NOT_FOUND]]\n- 質問がFAQのQと一致・類似している場合は、そのAの内容を必ずそのまま回答する。話題が総務らしくない・雑談っぽい等の理由で回答を拒否したり、範囲外だと注釈を付けたりしないこと\n- 仕訳科目・消費税区分・経費・財務に関する質問への回答末尾は「ご不明な点がございましたら、財務部（内線：81257）までお問合せください。」とする\n- 回答は簡潔に、でも必要な情報は漏らさず答える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n';
 let SYSTEM_PROMPT = SYSTEM_PROMPT_BASE;
 
 function parseCSVLine(line) {
@@ -285,7 +285,9 @@ function parseCSVLine(line) {
   try {
     let faq = '';
     for (const url of SHEET_URLS) {
-      const r = await fetch(url);
+      // Googleの「ウェブに公開」CSVはURLをキャッシュするため、毎回別URLに見せかけて最新版を取得する
+      const bustedUrl = url + (url.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
+      const r = await fetch(bustedUrl, { cache: 'no-store' });
       const csv = await r.text();
       const lines = csv.split('\n').slice(1); // 1行目（ヘッダー）をスキップ
       for (const line of lines) {
