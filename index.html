@@ -106,6 +106,7 @@
   iframe.faq-video { aspect-ratio: 16 / 9; border: none; }
   .faq-doc {
     margin-top: 10px;
+    margin-right: 8px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -452,13 +453,20 @@ function appendMessage(role, text, isError = false, imageFile = '', videoFile = 
   if (docLink) {
     // 資料(PDF等)はプレビュー埋め込みせず、新しいタブで開くリンクとして表示する
     // （Google Driveの共有リンクはiframe埋め込みができないため）
-    const a = document.createElement('a');
-    a.href = docLink;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.className = 'faq-doc';
-    a.textContent = '📄 資料を見る';
-    bubble.appendChild(a);
+    // H列は "|" 区切りで複数指定でき、各項目は "ラベル:URL" または "URL" 単体で書ける
+    const docs = docLink.split('|').map(s => s.trim()).filter(Boolean).map(entry => {
+      const m = entry.match(/^(.*?):\s*(https?:\/\/.+)$/);
+      return m ? { label: m[1].trim(), url: m[2].trim() } : { label: '', url: entry };
+    });
+    for (const d of docs) {
+      const a = document.createElement('a');
+      a.href = d.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.className = 'faq-doc';
+      a.textContent = d.label ? `📄 ${d.label}` : '📄 資料を見る';
+      bubble.appendChild(a);
+    }
   }
   div.appendChild(av);
   div.appendChild(bubble);
