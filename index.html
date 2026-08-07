@@ -491,13 +491,21 @@ function removeTyping() {
   if (el) el.remove();
 }
 
+// ── 質問者のIPアドレス（ブラウザから見た自分のグローバルIP）を先読みしておく ──
+// 社内から使う場合は同じ回線の全員が同じIPになるため、個人特定用ではなく参考情報。
+let clientIP = '';
+fetch('https://api.ipify.org?format=json')
+  .then(r => r.json())
+  .then(d => { clientIP = d.ip || ''; })
+  .catch(() => {});
+
 // ── 未回答だった質問をGoogle Apps Script経由でスプレッドシートに追記（画面には結果を表示しない）──
 function reportUnknownQuestion(question) {
   if (!APPEND_URL || APPEND_URL.indexOf('PLACEHOLDER') !== -1) return;
   fetch(APPEND_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ question })
+    body: JSON.stringify({ question, ip: clientIP })
   }).catch(err => console.error('未回答質問の記録に失敗:', err));
 }
 
