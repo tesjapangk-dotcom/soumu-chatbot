@@ -270,15 +270,26 @@ let FAQ_DATA = [];
 const SYSTEM_PROMPT_BASE = 'あなたはテスジャパンの総務部担当アシスタントです。\n以下の「社内FAQ・資料」の内容だけを根拠にして、社員の質問に日本語で答えてください。\n\n【重要なルール】\n- 資料に書いていないことは、他の文章を一切書かず、正確に次の1行だけを出力する：[[NOT_FOUND]]\n- 質問がFAQのQと一致・類似している場合は、そのAの内容を必ずそのまま回答する。話題が総務らしくない・雑談っぽい等の理由で回答を拒否したり、範囲外だと注釈を付けたりしないこと\n- 仕訳科目・消費税区分・経費・財務に関する質問への回答末尾は「ご不明な点がございましたら、財務部（内線：81257）までお問合せください。」とする\n- 回答は簡潔に、でも必要な情報は漏らさず答える\n- 親しみやすい丁寧な敬語で答える\n\n【社内FAQ・資料】\n';
 let SYSTEM_PROMPT = SYSTEM_PROMPT_BASE;
 
-function parseCSVLine(line) {
-  const result = []; let cur = ''; let inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    if (line[i] === '"') { inQ = !inQ; }
-    else if (line[i] === ',' && !inQ) { result.push(cur); cur = ''; }
-    else { cur += line[i]; }
+// CSV全体を1文字ずつ解析する（セル内に改行やカンマが含まれていても正しく1行として扱う）
+function parseCSV(text) {
+  const rows = []; let row = []; let field = ''; let inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else { inQ = false; }
+      } else { field += c; }
+    } else {
+      if (c === '"') { inQ = true; }
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\r') { /* skip */ }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else { field += c; }
+    }
   }
-  result.push(cur);
-  return result;
+  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
+  return rows;
 }
 
 // 複数シートをまとめて読み込む
@@ -290,12 +301,10 @@ function parseCSVLine(line) {
       const bustedUrl = url + (url.includes('?') ? '&' : '?') + 'cachebust=' + Date.now();
       const r = await fetch(bustedUrl, { cache: 'no-store' });
       const csv = await r.text();
-      const lines = csv.split('\n').slice(1); // 1行目（ヘッダー）をスキップ
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        const parts = parseCSVLine(line);
+      const rows = parseCSV(csv).slice(1); // 1行目（ヘッダー）をスキップ
+      for (const parts of rows) {
         // B列(parts[1])=質問, C列(parts[2])=回答, D列(parts[3])=有効/無効, F列(parts[5])=画像, G列(parts[6])=動画, H列(parts[7])=資料(PDF等)
-        if (parts.length >= 4 && parts[3].trim() === '有効' && parts[1].trim()) {
+        if (parts.length >= 4 && (parts[3] || '').trim() === '有効' && (parts[1] || '').trim()) {
           const q = parts[1].trim();
           const a = parts[2].trim();
           const image = (parts[5] || '').trim();
