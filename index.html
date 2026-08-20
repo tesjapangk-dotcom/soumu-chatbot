@@ -397,13 +397,23 @@ function findVisualForAnswer(userText) {
   for (const row of FAQ_DATA) {
     if (!row.image && !row.video && !row.doc) continue;
     const noun = primaryNoun(coreKeyword(row.q));
-    if (noun.length >= 2 && norm.includes(noun)) candidates.push({ row, len: noun.length });
+    if (noun.length >= 2 && norm.includes(noun)) candidates.push({ row, noun, len: noun.length });
   }
   if (candidates.length === 0) return null;
   candidates.sort((a, b) => b.len - a.len);
-  // 候補が複数タイで並ぶ場合は誤表示を避けるため何も返さない
-  if (candidates.length > 1 && candidates[0].len === candidates[1].len) return null;
-  return candidates[0].row;
+  const top = candidates.filter(c => c.len === candidates[0].len);
+  if (top.length > 1) {
+    // 候補が複数タイで並ぶ場合、すべて同じ主要語（＝同じ話題のFAQが複数ある）なら
+    // 誤表示ではないので、それぞれの資料・画像・動画をまとめて返す。
+    // 主要語が異なる（偶然の同着）場合のみ、誤表示を避けるため何も返さない。
+    const sameTopic = top.every(c => c.noun === top[0].noun);
+    if (!sameTopic) return null;
+    const doc = [...new Set(top.map(c => c.row.doc).filter(Boolean))].join('|');
+    const withImage = top.find(c => c.row.image);
+    const withVideo = top.find(c => c.row.video);
+    return { image: withImage ? withImage.row.image : '', video: withVideo ? withVideo.row.video : '', doc };
+  }
+  return top[0].row;
 }
 
 
