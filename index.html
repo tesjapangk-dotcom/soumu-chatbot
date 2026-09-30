@@ -379,16 +379,24 @@ function coreKeyword(q) {
 function primaryNoun(key) {
   return (key.split(/[のをがはでとに]/)[0] || '').trim();
 }
+// 「・」「、」「／」「の」等で区切られた複合語（例:「延長ケーブル・USBハブ」「卓上プリンターのトナー」）を、
+// 全体だけでなく個々の品目名（「延長ケーブル」「USBハブ」「トナー」）でも一致判定できるよう分解する
+function keyVariants(key) {
+  const parts = key.split(/[・、,／\/の]/).map(s => s.trim()).filter(s => s.length >= 2);
+  return parts.length > 1 ? [key, ...parts] : [key];
+}
 function findVisualForAnswer(userText) {
   const norm = userText.replace(/\s+/g, '');
-  // 1段階目: 核となる語句どうしの包含関係（双方向）で厳密に判定
+  // 1段階目: 核となる語句（複合語は個々の品目名も含む）どうしの包含関係（双方向）で厳密に判定
   let best = null, bestLen = 0;
   for (const row of FAQ_DATA) {
     if (!row.image && !row.video && !row.doc) continue;
     const key = coreKeyword(row.q);
     if (key.length < 2) continue;
-    if (norm.includes(key) || key.includes(norm)) {
-      if (key.length > bestLen) { bestLen = key.length; best = row; }
+    for (const variant of keyVariants(key)) {
+      if (norm.includes(variant) || variant.includes(norm)) {
+        if (variant.length > bestLen) { bestLen = variant.length; best = row; }
+      }
     }
   }
   if (best) return best;
